@@ -27,8 +27,10 @@ export const runCommand: CommandRunner = async (
     let stdout = "";
     let stderr = "";
     let timedOut = false;
+    let aborted = false;
     let settled = false;
     let timer: NodeJS.Timeout | undefined;
+    let onAbort: (() => void) | undefined;
 
     const child = spawn(command, args, {
       cwd: options.cwd,
@@ -48,6 +50,10 @@ export const runCommand: CommandRunner = async (
         clearTimeout(timer);
       }
 
+      if (onAbort) {
+        options.signal?.removeEventListener("abort", onAbort);
+      }
+
       resolve({
         command,
         args,
@@ -57,9 +63,21 @@ export const runCommand: CommandRunner = async (
         stderr: redactSecrets(stderr),
         durationMs: Date.now() - startedAt,
         timedOut,
+        aborted,
         error: result.error
       });
     };
+
+    onAbort = () => {
+      aborted = true;
+      child.kill("SIGTERM");
+    };
+
+    if (options.signal?.aborted) {
+      onAbort();
+    } else {
+      options.signal?.addEventListener("abort", onAbort, { once: true });
+    }
 
     if (options.timeoutMs && options.timeoutMs > 0) {
       timer = setTimeout(() => {

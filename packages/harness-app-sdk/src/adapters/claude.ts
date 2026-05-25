@@ -1,6 +1,7 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
 import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
+import { createJsonlStreamParser } from "../streaming.js";
 
 export function createClaudeAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
   const command = options.command ?? "claude";
@@ -51,14 +52,28 @@ export function createClaudeAdapter(options: Partial<AdapterOptions> = {}): Prov
       }
     },
     async run(request: ResolvedHarnessRunRequest) {
-      const args = ["-p", request.prompt, "--output-format", "text", "--permission-mode"];
+      const args = ["-p", request.prompt, "--output-format"];
+      args.push(request.stream ? "stream-json" : "text");
+
+      if (request.stream) {
+        args.push("--include-partial-messages");
+      }
+
+      args.push("--permission-mode");
       args.push(request.allowEdits ? "default" : "plan");
 
       if (request.model) {
         args.push("--model", request.model);
       }
 
-      return await runProviderCommand("claude", command, args, request, runner);
+      return await runProviderCommand(
+        "claude",
+        command,
+        args,
+        request,
+        runner,
+        request.stream ? createJsonlStreamParser("claude") : undefined
+      );
     }
   };
 }

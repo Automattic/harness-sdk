@@ -1,6 +1,7 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
 import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
+import { createJsonlStreamParser } from "../streaming.js";
 
 export function createCodexAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
   const command = options.command ?? "codex";
@@ -43,7 +44,7 @@ export function createCodexAdapter(options: Partial<AdapterOptions> = {}): Provi
 
       args.push(request.prompt);
 
-      return await runProviderCommand("codex", command, args, request, runner);
+      return await runProviderCommand("codex", command, args, request, runner, createJsonlStreamParser("codex"));
     }
   };
 }

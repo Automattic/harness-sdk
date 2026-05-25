@@ -1,26 +1,19 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
-import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
 import { createJsonlStreamParser } from "../streaming.js";
+import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
 
-export function createCopilotAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
-  const command = options.command ?? "copilot";
+export function createGeminiAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
+  const command = options.command ?? "gemini";
   const runner = options.runner ?? runCommand;
   const env = options.env ?? {};
 
   return {
-    id: "copilot",
-    name: "GitHub Copilot CLI",
+    id: "gemini",
+    name: "Gemini CLI",
     command,
     async detect(): Promise<ProviderStatus> {
-      const base = await detectVersion(
-        "copilot",
-        "GitHub Copilot CLI",
-        command,
-        runner,
-        process.cwd(),
-        env
-      );
+      const base = await detectVersion("gemini", "Gemini CLI", command, runner, process.cwd(), env);
 
       if (!base.available) {
         return withoutVersionResult(base);
@@ -29,32 +22,25 @@ export function createCopilotAdapter(options: Partial<AdapterOptions> = {}): Pro
       return {
         ...withoutVersionResult(base),
         authenticated: null,
-        message: "Copilot authentication is checked when a run starts. Run `copilot login` if it fails."
+        message: "Gemini authentication is checked when a run starts. Run `gemini` to sign in if it fails."
       };
     },
     async run(request: ResolvedHarnessRunRequest) {
-      const args = [
-        "-p",
-        request.prompt,
-        "--no-ask-user",
-        "--no-auto-update",
-        "--output-format",
-        request.stream ? "json" : "text",
-        "--stream",
-        request.stream ? "on" : "off"
-      ];
+      const args = ["-p", request.prompt, "--output-format"];
+      args.push(request.stream ? "stream-json" : "text");
+      args.push("--approval-mode", request.allowEdits ? "auto_edit" : "plan");
 
       if (request.model) {
-        args.push("--model", request.model);
+        args.push("-m", request.model);
       }
 
       return await runProviderCommand(
-        "copilot",
+        "gemini",
         command,
         args,
         request,
         runner,
-        request.stream ? createJsonlStreamParser("copilot") : undefined
+        request.stream ? createJsonlStreamParser("gemini") : undefined
       );
     }
   };

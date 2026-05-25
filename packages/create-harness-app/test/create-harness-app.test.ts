@@ -33,7 +33,7 @@ describe("createHarnessApp", () => {
       dependencies: Record<string, string>;
     };
 
-    expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.0");
+    expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.2");
     await expect(stat(join(directory, "tsconfig.json"))).resolves.toBeTruthy();
   });
 
@@ -51,6 +51,7 @@ describe("createHarnessApp", () => {
 
     expect(server).toContain("createServer");
     expect(server).toContain("createHarnessClient");
+    expect(server).toContain("response.write(event.text)");
     expect(server).toContain("No API keys");
   });
 

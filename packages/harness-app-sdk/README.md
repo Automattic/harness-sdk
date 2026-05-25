@@ -11,8 +11,16 @@ import { createHarnessClient } from "harness-app-sdk";
 
 const harness = createHarnessClient();
 const result = await harness.run({
-  prompt: "Explain the current project."
+  prompt: "Explain the current project.",
+  stream: true,
+  onEvent(event) {
+    if (event.type === "chunk" && event.text) {
+      process.stdout.write(event.text);
+    }
+  }
 });
 
-console.log(result.text);
+if (!result.text) {
+  console.log("No response text received.");
+}
 ```

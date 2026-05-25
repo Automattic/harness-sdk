@@ -29,11 +29,15 @@ const status = await harness.detect();
 
 console.log(status);
 
-const result = await harness.run({
-  prompt: "Summarize this project in one paragraph."
+await harness.run({
+  prompt: "Summarize this project in one paragraph.",
+  stream: true,
+  onEvent(event) {
+    if (event.type === "chunk" && event.text) {
+      process.stdout.write(event.text);
+    }
+  }
 });
-
-console.log(result.text);
 ```
 
 ## Local Accounts, Not API Keys
@@ -42,6 +46,9 @@ Harness App SDK shells out to local CLIs with conservative defaults. It does not
 ask users to paste provider API keys, and it does not store secrets. If a
 provider is missing or logged out, Harness App SDK returns a provider-specific
 message that points the user back to the local CLI login flow.
+
+The SDK currently supports Claude Code, Codex CLI, GitHub Copilot CLI, and
+Gemini CLI.
 
 ## Development
 

@@ -1,4 +1,4 @@
-export type ProviderId = "claude" | "codex" | "copilot";
+export type ProviderId = "claude" | "codex" | "copilot" | "gemini";
 
 export type ProviderSelector = ProviderId | "auto";
 
@@ -20,6 +20,9 @@ export interface HarnessRunRequest {
   model?: string;
   timeoutMs?: number;
   allowEdits?: boolean;
+  stream?: boolean;
+  signal?: AbortSignal;
+  onEvent?: (event: HarnessEvent) => void;
 }
 
 export interface HarnessRunResult {
@@ -33,6 +36,7 @@ export interface HarnessRunResult {
   text: string;
   durationMs: number;
   timedOut: boolean;
+  aborted: boolean;
 }
 
 export interface ProviderStatus {
@@ -46,12 +50,16 @@ export interface ProviderStatus {
 }
 
 export interface HarnessEvent {
-  type: "start" | "stdout" | "stderr" | "exit";
+  type: "start" | "chunk" | "stdout" | "stderr" | "raw" | "exit" | "error";
   provider?: ProviderId;
   command?: string;
   args?: string[];
   data?: string;
+  text?: string;
+  raw?: unknown;
   exitCode?: number | null;
+  error?: Error | NodeJS.ErrnoException;
+  message?: string;
 }
 
 export interface ProviderAdapter {
@@ -73,6 +81,7 @@ export interface CommandRunnerOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
   timeoutMs?: number;
+  signal?: AbortSignal;
   onStdout?: (chunk: string) => void;
   onStderr?: (chunk: string) => void;
 }
@@ -86,6 +95,7 @@ export interface CommandResult {
   stderr: string;
   durationMs: number;
   timedOut: boolean;
+  aborted: boolean;
   error?: NodeJS.ErrnoException;
 }
 

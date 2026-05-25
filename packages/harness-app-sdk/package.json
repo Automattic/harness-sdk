@@ -1,6 +1,6 @@
 {
   "name": "harness-app-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Extend Harness with local AI accounts. No API keys.",
   "license": "MIT",
   "type": "module",
@@ -39,6 +39,7 @@
     "claude",
     "codex",
     "copilot",
+    "gemini",
     "local-ai"
   ]
 }

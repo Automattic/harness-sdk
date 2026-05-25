@@ -1,8 +1,10 @@
 import { createClaudeAdapter } from "./adapters/claude.js";
 import { createCodexAdapter } from "./adapters/codex.js";
 import { createCopilotAdapter } from "./adapters/copilot.js";
+import { createGeminiAdapter } from "./adapters/gemini.js";
 import { HarnessSdkError } from "./errors.js";
 import type {
+  HarnessEvent,
   HarnessClientOptions,
   HarnessRunRequest,
   HarnessRunResult,
@@ -27,7 +29,8 @@ export function createHarnessClient(options: HarnessClientOptions = {}): Harness
     [
       createClaudeAdapter({ runner: options.runner, env: options.env }),
       createCodexAdapter({ runner: options.runner, env: options.env }),
-      createCopilotAdapter({ runner: options.runner, env: options.env })
+      createCopilotAdapter({ runner: options.runner, env: options.env }),
+      createGeminiAdapter({ runner: options.runner, env: options.env })
     ];
 
   const cwd = options.cwd ?? process.cwd();
@@ -45,12 +48,14 @@ export function createHarnessClient(options: HarnessClientOptions = {}): Harness
       }
 
       const provider = await resolveProvider(request.provider ?? defaultProvider, providers);
+      const onEvent = combineEventHandlers(options.onEvent, request.onEvent);
       const resolvedRequest: ResolvedHarnessRunRequest = {
         ...request,
         cwd: request.cwd ?? cwd,
         env: { ...process.env, ...options.env, ...request.env },
         timeoutMs: request.timeoutMs ?? timeoutMs,
-        onEvent: options.onEvent
+        stream: request.stream === true || Boolean(onEvent),
+        onEvent
       };
 
       const status = await provider.detect();
@@ -106,7 +111,7 @@ async function resolveProvider(
   if (!status) {
     throw new HarnessSdkError(
       "PROVIDER_NOT_FOUND",
-      "No local Harness provider is available. Install and log in to Claude, Codex, or Copilot.",
+      "No local Harness provider is available. Install and log in to Claude, Codex, Copilot, or Gemini.",
       { statuses }
     );
   }
@@ -121,3 +126,21 @@ async function resolveProvider(
 }
 
 export type { ProviderId };
+
+function combineEventHandlers(
+  clientHandler: ((event: HarnessEvent) => void) | undefined,
+  requestHandler: ((event: HarnessEvent) => void) | undefined
+): ((event: HarnessEvent) => void) | undefined {
+  if (!clientHandler) {
+    return requestHandler;
+  }
+
+  if (!requestHandler || requestHandler === clientHandler) {
+    return clientHandler;
+  }
+
+  return (event) => {
+    clientHandler(event);
+    requestHandler(event);
+  };
+}

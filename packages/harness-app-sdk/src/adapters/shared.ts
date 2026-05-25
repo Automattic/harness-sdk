@@ -8,6 +8,7 @@ import type {
   ResolvedHarnessRunRequest
 } from "../types.js";
 import { commandText } from "../process.js";
+import { createTextStreamParser, type StreamParser } from "../streaming.js";
 
 export interface AdapterOptions {
   command?: string;
@@ -69,9 +70,11 @@ export async function runProviderCommand(
   command: string,
   args: string[],
   request: ResolvedHarnessRunRequest,
-  runner: CommandRunner
+  runner: CommandRunner,
+  streamParser: StreamParser = createTextStreamParser(provider)
 ): Promise<HarnessRunResult> {
   const onEvent = request.onEvent;
+  const parser = request.stream ? streamParser : undefined;
 
   emit(onEvent, {
     type: "start",
@@ -84,9 +87,26 @@ export async function runProviderCommand(
     cwd: request.cwd,
     env: request.env,
     timeoutMs: request.timeoutMs,
-    onStdout: (data) => emit(onEvent, { type: "stdout", provider, data }),
+    signal: request.signal,
+    onStdout: (data) => {
+      emit(onEvent, { type: "stdout", provider, data });
+      parser?.onStdout(data, (event) => emit(onEvent, event));
+    },
     onStderr: (data) => emit(onEvent, { type: "stderr", provider, data })
   });
+
+  parser?.flush((event) => emit(onEvent, event));
+
+  if (result.error) {
+    emit(onEvent, {
+      type: "error",
+      provider,
+      command,
+      args,
+      error: result.error,
+      message: result.error.message
+    });
+  }
 
   emit(onEvent, {
     type: "exit",
@@ -104,9 +124,10 @@ export async function runProviderCommand(
     exitCode: result.exitCode,
     stdout: result.stdout,
     stderr: result.stderr,
-    text: commandText(result),
+    text: parser?.text() || commandText(result),
     durationMs: result.durationMs,
-    timedOut: result.timedOut
+    timedOut: result.timedOut,
+    aborted: result.aborted
   };
 }
 
