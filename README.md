@@ -32,7 +32,7 @@ That means your app can:
 | Package | Purpose |
 | --- | --- |
 | [`harness-app-sdk`](https://www.npmjs.com/package/harness-app-sdk) | TypeScript SDK for detecting and running local AI providers. |
-| [`create-harness-app`](https://www.npmjs.com/package/create-harness-app) | Scaffolder for CLI and web demos powered by the SDK. |
+| [`create-harness-app`](https://www.npmjs.com/package/create-harness-app) | Scaffolder for chat-style CLI and web demos powered by streamed SDK output. |
 
 ## Quick Start
 
@@ -51,6 +51,9 @@ Choose a template:
 npx create-harness-app my-cli --template cli
 npx create-harness-app my-web --template web
 ```
+
+The CLI template prints a streaming terminal transcript. The web template runs a
+local Node server with a provider picker and live assistant bubbles.
 
 Or install the SDK directly:
 

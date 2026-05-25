@@ -35,6 +35,12 @@ describe("createHarnessApp", () => {
 
     expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.2");
     await expect(stat(join(directory, "tsconfig.json"))).resolves.toBeTruthy();
+
+    const cli = await readFile(join(directory, "src/index.ts"), "utf8");
+
+    expect(cli).toContain("createStreamingBubbleWriter");
+    expect(cli).toContain("--provider");
+    expect(cli).toContain("stream: true");
   });
 
   it("creates a web demo with a local Node server", async () => {
@@ -53,6 +59,10 @@ describe("createHarnessApp", () => {
     expect(server).toContain("createHarnessClient");
     expect(server).toContain("response.write(event.text)");
     expect(server).toContain("No API keys");
+    expect(server).toContain('role="log"');
+    expect(server).toContain("class=\"bubble\"");
+    expect(server).toContain("provider");
+    expect(server).toContain("streamIntoBubble");
   });
 
   it("generates templates that typecheck against the SDK", async () => {
