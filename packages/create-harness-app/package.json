@@ -1,6 +1,6 @@
 {
   "name": "create-harness-app",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Create a Harness App SDK demo app.",
   "license": "MIT",
   "type": "module",

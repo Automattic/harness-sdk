@@ -17,7 +17,7 @@ export interface CreateHarnessAppResult {
   files: string[];
 }
 
-const HARNESS_APP_SDK_VERSION = "^0.1.2";
+const HARNESS_APP_SDK_VERSION = "^0.1.5";
 
 export async function createHarnessApp(
   options: CreateHarnessAppOptions
