@@ -1,6 +1,6 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
-import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
+import { detectVersion, extraArgs, runProviderCommand, type AdapterOptions } from "./shared.js";
 import { createJsonlStreamParser } from "../streaming.js";
 
 export function createClaudeAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
@@ -65,6 +65,8 @@ export function createClaudeAdapter(options: Partial<AdapterOptions> = {}): Prov
       if (request.model) {
         args.push("--model", request.model);
       }
+
+      args.push(...extraArgs(request));
 
       return await runProviderCommand(
         "claude",

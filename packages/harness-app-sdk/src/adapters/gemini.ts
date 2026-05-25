@@ -1,7 +1,7 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
 import { createJsonlStreamParser } from "../streaming.js";
-import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
+import { detectVersion, extraArgs, runProviderCommand, type AdapterOptions } from "./shared.js";
 
 export function createGeminiAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
   const command = options.command ?? "gemini";
@@ -33,6 +33,8 @@ export function createGeminiAdapter(options: Partial<AdapterOptions> = {}): Prov
       if (request.model) {
         args.push("-m", request.model);
       }
+
+      args.push(...extraArgs(request));
 
       return await runProviderCommand(
         "gemini",

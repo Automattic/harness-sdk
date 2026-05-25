@@ -18,6 +18,7 @@ export interface HarnessRunRequest {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   model?: string;
+  args?: string[];
   timeoutMs?: number;
   allowEdits?: boolean;
   stream?: boolean;

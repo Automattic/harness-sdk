@@ -1,6 +1,6 @@
 import type { ProviderAdapter, ProviderStatus, ResolvedHarnessRunRequest } from "../types.js";
 import { runCommand } from "../process.js";
-import { detectVersion, runProviderCommand, type AdapterOptions } from "./shared.js";
+import { detectVersion, extraArgs, runProviderCommand, type AdapterOptions } from "./shared.js";
 import { createJsonlStreamParser } from "../streaming.js";
 
 export function createCopilotAdapter(options: Partial<AdapterOptions> = {}): ProviderAdapter {
@@ -47,6 +47,8 @@ export function createCopilotAdapter(options: Partial<AdapterOptions> = {}): Pro
       if (request.model) {
         args.push("--model", request.model);
       }
+
+      args.push(...extraArgs(request));
 
       return await runProviderCommand(
         "copilot",

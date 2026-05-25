@@ -214,6 +214,29 @@ describe("adapter command construction", () => {
     expect(runner.calls[1]?.args).toContain("workspace-write");
     expect(runner.calls[2]?.args).toContain("auto_edit");
   });
+
+  it("passes request args through to provider CLIs", async () => {
+    const runner = createMockRunner(() => ({ stdout: "ok\n" }));
+
+    await createClaudeAdapter({ runner }).run(createRequest({ args: ["--debug"] }));
+    await createCodexAdapter({ runner }).run(createRequest({ args: ["--profile", "work"] }));
+    await createCopilotAdapter({ runner }).run(createRequest({ args: ["--model", "gpt-5.2"] }));
+    await createGeminiAdapter({ runner }).run(createRequest({ args: ["--sandbox"] }));
+
+    expect(runner.calls[0]?.args.at(-1)).toBe("--debug");
+    expect(runner.calls[1]?.args).toEqual([
+      "exec",
+      "--json",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--profile",
+      "work",
+      "Say hello"
+    ]);
+    expect(runner.calls[2]?.args.slice(-2)).toEqual(["--model", "gpt-5.2"]);
+    expect(runner.calls[3]?.args.at(-1)).toBe("--sandbox");
+  });
 });
 
 describe("adapter streaming", () => {

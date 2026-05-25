@@ -16,6 +16,10 @@ export interface AdapterOptions {
   runner: CommandRunner;
 }
 
+export function extraArgs(request: ResolvedHarnessRunRequest): string[] {
+  return request.args ?? [];
+}
+
 export async function detectVersion(
   id: ProviderId,
   name: string,

@@ -135,7 +135,8 @@ known to be unauthenticated.
 ```ts
 await harness.run({
   provider: "claude",
-  prompt: "Write release notes for the latest commits."
+  prompt: "Write release notes for the latest commits.",
+  args: ["--model", "sonnet"]
 });
 ```
 
@@ -189,6 +190,7 @@ type HarnessRunRequest = {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   model?: string;
+  args?: string[];
   timeoutMs?: number;
   allowEdits?: boolean;
   stream?: boolean;
@@ -199,6 +201,18 @@ type HarnessRunRequest = {
 
 The result includes command metadata, buffered stdout/stderr, normalized text,
 duration, timeout state, and abort state.
+
+Use `args` for provider-specific CLI flags that Harness App SDK does not model
+directly. The SDK still uses `spawn` with `shell: false`, so each flag and value
+must be a separate array item:
+
+```ts
+await harness.run({
+  provider: "gemini",
+  prompt: "Review this folder.",
+  args: ["--sandbox"]
+});
+```
 
 ### `HarnessEvent`
 
