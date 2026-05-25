@@ -159,6 +159,7 @@ describe("adapter command construction", () => {
       "Say hello",
       "--output-format",
       "text",
+      "--skip-trust",
       "--approval-mode",
       "plan"
     ]);
@@ -199,6 +200,7 @@ describe("adapter command construction", () => {
       "Say hello",
       "--output-format",
       "stream-json",
+      "--skip-trust",
       "--approval-mode",
       "plan"
     ]);

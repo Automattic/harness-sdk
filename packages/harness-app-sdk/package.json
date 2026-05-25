@@ -1,6 +1,6 @@
 {
   "name": "harness-app-sdk",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Extend Harness with local AI accounts. No API keys.",
   "license": "MIT",
   "type": "module",

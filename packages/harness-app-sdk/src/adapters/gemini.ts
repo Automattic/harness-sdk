@@ -28,6 +28,7 @@ export function createGeminiAdapter(options: Partial<AdapterOptions> = {}): Prov
     async run(request: ResolvedHarnessRunRequest) {
       const args = ["-p", request.prompt, "--output-format"];
       args.push(request.stream ? "stream-json" : "text");
+      args.push("--skip-trust");
       args.push("--approval-mode", request.allowEdits ? "auto_edit" : "plan");
 
       if (request.model) {
