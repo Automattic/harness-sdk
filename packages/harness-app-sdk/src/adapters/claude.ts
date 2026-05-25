@@ -57,6 +57,7 @@ export function createClaudeAdapter(options: Partial<AdapterOptions> = {}): Prov
 
       if (request.stream) {
         args.push("--include-partial-messages");
+        args.push("--verbose");
       }
 
       args.push("--permission-mode");

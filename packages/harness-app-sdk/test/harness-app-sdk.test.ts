@@ -179,6 +179,7 @@ describe("adapter command construction", () => {
       "--output-format",
       "stream-json",
       "--include-partial-messages",
+      "--verbose",
       "--permission-mode",
       "plan"
     ]);
@@ -240,24 +241,25 @@ describe("adapter command construction", () => {
 });
 
 describe("adapter streaming", () => {
-  it.each([
-    ["claude", createClaudeAdapter],
-    ["codex", createCodexAdapter],
-    ["copilot", createCopilotAdapter],
-    ["gemini", createGeminiAdapter]
-  ] as const)("emits normalized JSONL chunks for %s", async (_id, createAdapter) => {
+  it("extracts Claude content block deltas without duplicating final result events", async () => {
     const events: HarnessEvent[] = [];
     const runner = createMockRunner((_command, _args, options) => {
       options.onStdout?.(
-        '{"type":"message","delta":"hel"}\n{"type":"message","text":"lo"}\n{"type":"result","result":"hello"}\n'
+        [
+          '{"type":"system","subtype":"init"}',
+          '{"type":"stream_event","event":{"type":"message_start","message":{"content":[]}}}',
+          '{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":"HEL"}}}',
+          '{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":"LO"}}}',
+          '{"type":"assistant","message":{"content":[{"type":"text","text":"HELLO"}]}}',
+          '{"type":"result","subtype":"success","result":"HELLO"}'
+        ].join("\n") + "\n"
       );
       return {
-        stdout:
-          '{"type":"message","delta":"hel"}\n{"type":"message","text":"lo"}\n{"type":"result","result":"hello"}\n'
+        stdout: ""
       };
     });
 
-    const result = await createAdapter({ runner }).run(
+    const result = await createClaudeAdapter({ runner }).run(
       createRequest({
         stream: true,
         onEvent: (event) => events.push(event)
@@ -265,10 +267,87 @@ describe("adapter streaming", () => {
     );
 
     expect(events.some((event) => event.type === "raw")).toBe(true);
-    expect(events.filter((event) => event.type === "chunk").map((event) => event.text).join("")).toBe(
-      "hello"
+    expect(chunkText(events)).toBe("HELLO");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("extracts Codex completed agent messages instead of event names", async () => {
+    const events: HarnessEvent[] = [];
+    const runner = createMockRunner((_command, _args, options) => {
+      options.onStdout?.(
+        [
+          '{"type":"thread.started","thread_id":"thread"}',
+          '{"type":"turn.started"}',
+          '{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"HELLO"}}',
+          '{"type":"turn.completed","usage":{"input_tokens":1}}'
+        ].join("\n") + "\n"
+      );
+      return { stdout: "" };
+    });
+
+    const result = await createCodexAdapter({ runner }).run(
+      createRequest({
+        stream: true,
+        onEvent: (event) => events.push(event)
+      })
     );
-    expect(result.text).toBe("hello");
+
+    expect(chunkText(events)).toBe("HELLO");
+    expect(chunkText(events)).not.toContain("thread.started");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("extracts Copilot assistant deltas and ignores final duplicate message events", async () => {
+    const events: HarnessEvent[] = [];
+    const runner = createMockRunner((_command, _args, options) => {
+      options.onStdout?.(
+        [
+          '{"type":"session.mcp_servers_loaded","data":{"servers":[]}}',
+          '{"type":"assistant.message_delta","data":{"messageId":"msg","deltaContent":"H"}}',
+          '{"type":"assistant.message_delta","data":{"messageId":"msg","deltaContent":"ELLO"}}',
+          '{"type":"assistant.message","data":{"messageId":"msg","content":"HELLO"}}',
+          '{"type":"result","exitCode":0}'
+        ].join("\n") + "\n"
+      );
+      return { stdout: "" };
+    });
+
+    const result = await createCopilotAdapter({ runner }).run(
+      createRequest({
+        stream: true,
+        onEvent: (event) => events.push(event)
+      })
+    );
+
+    expect(chunkText(events)).toBe("HELLO");
+    expect(chunkText(events)).not.toContain("assistant.message_delta");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("extracts Gemini assistant message deltas and skips user/result events", async () => {
+    const events: HarnessEvent[] = [];
+    const runner = createMockRunner((_command, _args, options) => {
+      options.onStdout?.(
+        [
+          '{"type":"init","session_id":"session","model":"gemini-3-flash-preview"}',
+          '{"type":"message","role":"user","content":"Reply with exactly HELLO."}',
+          '{"type":"message","role":"assistant","content":"HELLO","delta":true}',
+          '{"type":"result","status":"success"}'
+        ].join("\n") + "\n"
+      );
+      return { stdout: "" };
+    });
+
+    const result = await createGeminiAdapter({ runner }).run(
+      createRequest({
+        stream: true,
+        onEvent: (event) => events.push(event)
+      })
+    );
+
+    expect(chunkText(events)).toBe("HELLO");
+    expect(chunkText(events)).not.toContain("Reply with exactly HELLO");
+    expect(result.text).toBe("HELLO");
   });
 
   it("keeps malformed JSONL as raw events without throwing from the parser", async () => {
@@ -317,6 +396,13 @@ describe("adapter streaming", () => {
     expect(events.map((event) => event.data).join("\n")).not.toContain("another-secret");
   });
 });
+
+function chunkText(events: HarnessEvent[]): string {
+  return events
+    .filter((event) => event.type === "chunk")
+    .map((event) => event.text)
+    .join("");
+}
 
 describe("harness client", () => {
   it("auto-selects the first available authenticated provider", async () => {
