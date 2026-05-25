@@ -1,0 +1,47 @@
+{
+  "name": "create-harness-app",
+  "version": "0.1.0",
+  "description": "Create a Harness Kit demo app.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f/harness-sdk.git",
+    "directory": "packages/create-harness-app"
+  },
+  "bugs": {
+    "url": "https://github.com/f/harness-sdk/issues"
+  },
+  "homepage": "https://github.com/f/harness-sdk/tree/main/packages/create-harness-app#readme",
+  "bin": {
+    "create-harness-app": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "harness",
+    "create",
+    "scaffold",
+    "claude",
+    "codex",
+    "copilot"
+  ]
+}

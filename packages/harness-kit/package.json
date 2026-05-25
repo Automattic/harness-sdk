@@ -1,0 +1,44 @@
+{
+  "name": "harness-kit",
+  "version": "0.1.0",
+  "description": "Extend Harness with local AI accounts. No API keys.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f/harness-sdk.git",
+    "directory": "packages/harness-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/f/harness-sdk/issues"
+  },
+  "homepage": "https://github.com/f/harness-sdk/tree/main/packages/harness-kit#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "harness",
+    "sdk",
+    "claude",
+    "codex",
+    "copilot",
+    "local-ai"
+  ]
+}
