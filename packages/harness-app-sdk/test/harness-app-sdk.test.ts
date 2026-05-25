@@ -4,7 +4,7 @@ import {
   createCodexAdapter,
   createCopilotAdapter,
   createHarnessClient,
-  HarnessKitError,
+  HarnessSdkError,
   type CommandResult,
   type CommandRunner,
   type ProviderAdapter,
@@ -149,11 +149,11 @@ describe("harness client", () => {
     });
 
     await expect(client.run({ prompt: "Edit files" })).rejects.toMatchObject({
-      name: "HarnessKitError",
+      name: "HarnessSdkError",
       code: "PROVIDER_RUN_FAILED",
       provider: "copilot",
       message: "permission denied"
-    } satisfies Partial<HarnessKitError>);
+    } satisfies Partial<HarnessSdkError>);
   });
 });
 

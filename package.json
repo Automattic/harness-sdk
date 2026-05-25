@@ -19,9 +19,9 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "clean": "npm run clean --workspaces",
-    "pack:dry-run": "npm pack --dry-run --workspace harness-kit && npm pack --dry-run --workspace create-harness-app",
+    "pack:dry-run": "npm pack --dry-run --workspace harness-app-sdk && npm pack --dry-run --workspace create-harness-app",
     "test": "vitest run",
-    "test:live": "HARNESS_KIT_LIVE=1 vitest run packages/harness-kit/test/live.test.ts",
+    "test:live": "HARNESS_APP_SDK_LIVE=1 vitest run packages/harness-app-sdk/test/live.test.ts",
     "typecheck": "npm run typecheck --workspaces"
   },
   "devDependencies": {

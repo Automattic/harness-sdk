@@ -87,7 +87,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 function printHelp(): void {
   console.log(`create-harness-app
 
-Create a Harness Kit demo app that uses local AI accounts. No API keys.
+Create a Harness App SDK demo app that uses local AI accounts. No API keys.
 
 Usage:
   npx create-harness-app <app-name>

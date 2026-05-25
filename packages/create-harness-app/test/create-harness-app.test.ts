@@ -11,7 +11,7 @@ const execFileAsync = promisify(execFile);
 const testDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(testDir, "../../..");
 const tscBin = resolve(repoRoot, "node_modules/typescript/bin/tsc");
-const harnessKitSource = resolve(repoRoot, "packages/harness-kit/src/index.ts");
+const harnessAppSdkSource = resolve(repoRoot, "packages/harness-app-sdk/src/index.ts");
 const nodeTypeRoots = resolve(repoRoot, "node_modules/@types");
 
 describe("createHarnessApp", () => {
@@ -33,7 +33,7 @@ describe("createHarnessApp", () => {
       dependencies: Record<string, string>;
     };
 
-    expect(packageJson.dependencies["harness-kit"]).toBe("^0.1.0");
+    expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.0");
     await expect(stat(join(directory, "tsconfig.json"))).resolves.toBeTruthy();
   });
 
@@ -111,7 +111,7 @@ async function patchTsconfigForLocalSdk(directory: string): Promise<void> {
 
   tsconfig.compilerOptions.baseUrl = ".";
   tsconfig.compilerOptions.paths = {
-    "harness-kit": [harnessKitSource]
+    "harness-app-sdk": [harnessAppSdkSource]
   };
   tsconfig.compilerOptions.typeRoots = [nodeTypeRoots];
 

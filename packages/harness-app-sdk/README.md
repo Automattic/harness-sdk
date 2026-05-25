@@ -1,13 +1,13 @@
-# harness-kit
+# harness-app-sdk
 
 Extend Harness with local AI accounts. No API keys.
 
 ```sh
-npm install harness-kit
+npm install harness-app-sdk
 ```
 
 ```ts
-import { createHarnessClient } from "harness-kit";
+import { createHarnessClient } from "harness-app-sdk";
 
 const harness = createHarnessClient();
 const result = await harness.run({
