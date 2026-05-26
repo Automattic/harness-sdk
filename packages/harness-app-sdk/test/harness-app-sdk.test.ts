@@ -5,6 +5,7 @@ import {
   createCopilotAdapter,
   createGeminiAdapter,
   createHarnessClient,
+  createWpStudioAdapter,
   HarnessSdkError,
   type CommandResult,
   type CommandRunner,
@@ -127,6 +128,7 @@ describe("adapter command construction", () => {
     await createCodexAdapter({ runner }).run(request);
     await createCopilotAdapter({ runner }).run(request);
     await createGeminiAdapter({ runner }).run(request);
+    await createWpStudioAdapter({ runner }).run(request);
 
     expect(runner.calls[0]?.args).toEqual([
       "-p",
@@ -163,6 +165,8 @@ describe("adapter command construction", () => {
       "--approval-mode",
       "plan"
     ]);
+    expect(runner.calls[4]?.command).toBe("npx");
+    expect(runner.calls[4]?.args).toEqual(["wp-studio@latest", "code", "Say hello", "--json"]);
   });
 
   it("uses native streaming flags for every provider", async () => {
@@ -173,6 +177,7 @@ describe("adapter command construction", () => {
     await createCodexAdapter({ runner }).run(request);
     await createCopilotAdapter({ runner }).run(request);
     await createGeminiAdapter({ runner }).run(request);
+    await createWpStudioAdapter({ runner }).run(request);
 
     expect(runner.calls[0]?.args).toEqual([
       "-p",
@@ -204,6 +209,7 @@ describe("adapter command construction", () => {
       "--approval-mode",
       "plan"
     ]);
+    expect(runner.calls[4]?.args).toEqual(["wp-studio@latest", "code", "Say hello", "--json"]);
   });
 
   it("lets callers opt in to edit-capable provider modes", async () => {
@@ -225,6 +231,7 @@ describe("adapter command construction", () => {
     await createCodexAdapter({ runner }).run(createRequest({ args: ["--profile", "work"] }));
     await createCopilotAdapter({ runner }).run(createRequest({ args: ["--model", "gpt-5.2"] }));
     await createGeminiAdapter({ runner }).run(createRequest({ args: ["--sandbox"] }));
+    await createWpStudioAdapter({ runner }).run(createRequest({ args: ["--foo", "bar"] }));
 
     expect(runner.calls[0]?.args.at(-1)).toBe("--debug");
     expect(runner.calls[1]?.args).toEqual([
@@ -239,6 +246,14 @@ describe("adapter command construction", () => {
     ]);
     expect(runner.calls[2]?.args.slice(-2)).toEqual(["--model", "gpt-5.2"]);
     expect(runner.calls[3]?.args.at(-1)).toBe("--sandbox");
+    expect(runner.calls[4]?.args).toEqual([
+      "wp-studio@latest",
+      "code",
+      "Say hello",
+      "--foo",
+      "bar",
+      "--json"
+    ]);
   });
 });
 
@@ -349,6 +364,37 @@ describe("adapter streaming", () => {
 
     expect(chunkText(events)).toBe("HELLO");
     expect(chunkText(events)).not.toContain("Reply with exactly HELLO");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("extracts WP Studio assistant deltas and ignores echoed/final duplicate messages", async () => {
+    const events: HarnessEvent[] = [];
+    const runner = createMockRunner((_command, _args, options) => {
+      options.onStdout?.(
+        [
+          '{"type":"turn.started","timestamp":"2026-05-26T15:53:57.205Z"}',
+          '{"type":"message","message":{"type":"message_start","message":{"role":"user","content":[{"type":"text","text":"hello"}]}}}',
+          '{"type":"message","message":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"HEL"},"message":{"role":"assistant","content":[{"type":"text","text":"HEL"}]}}}',
+          '{"type":"message","message":{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"LO"},"message":{"role":"assistant","content":[{"type":"text","text":"HELLO"}]}}}',
+          '{"type":"message","message":{"type":"message_update","assistantMessageEvent":{"type":"text_end","content":"HELLO"},"message":{"role":"assistant","content":[{"type":"text","text":"HELLO"}]}}}',
+          '{"type":"message","message":{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"HELLO"}]}}}',
+          '{"type":"message","message":{"type":"turn_end","message":{"role":"assistant","content":[{"type":"text","text":"HELLO"}]}}}',
+          '{"type":"message","message":{"type":"agent_end","messages":[{"role":"user","content":[{"type":"text","text":"hello"}]},{"role":"assistant","content":[{"type":"text","text":"HELLO"}]}]}}',
+          '{"type":"turn.completed","status":"success"}'
+        ].join("\n") + "\n"
+      );
+      return { stdout: "" };
+    });
+
+    const result = await createWpStudioAdapter({ runner }).run(
+      createRequest({
+        stream: true,
+        onEvent: (event) => events.push(event)
+      })
+    );
+
+    expect(chunkText(events)).toBe("HELLO");
+    expect(chunkText(events)).not.toContain("hello");
     expect(result.text).toBe("HELLO");
   });
 

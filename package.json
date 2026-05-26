@@ -19,6 +19,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "clean": "npm run clean --workspaces",
+    "debug:ui": "npm run dev --workspace harness-debug-ui",
     "pack:dry-run": "npm pack --dry-run --workspace harness-app-sdk && npm pack --dry-run --workspace create-harness-app",
     "test": "vitest run",
     "test:live": "HARNESS_APP_SDK_LIVE=1 vitest run packages/harness-app-sdk/test/live.test.ts",

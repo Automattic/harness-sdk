@@ -1,6 +1,6 @@
 {
   "name": "create-harness-app",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Create a Harness App SDK demo app.",
   "license": "MIT",
   "type": "module",
@@ -43,6 +43,7 @@
     "claude",
     "codex",
     "copilot",
-    "gemini"
+    "gemini",
+    "wp-studio"
   ]
 }

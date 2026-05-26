@@ -1,0 +1,24 @@
+{
+  "name": "harness-debug-ui",
+  "version": "0.1.6",
+  "private": true,
+  "description": "Local debugging workbench for Harness App SDK providers.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "dev": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "harness-app-sdk": "0.1.6"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

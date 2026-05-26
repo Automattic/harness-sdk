@@ -17,7 +17,7 @@ export interface CreateHarnessAppResult {
   files: string[];
 }
 
-const HARNESS_APP_SDK_VERSION = "^0.1.5";
+const HARNESS_APP_SDK_VERSION = "^0.1.6";
 
 export async function createHarnessApp(
   options: CreateHarnessAppOptions
@@ -100,7 +100,7 @@ function cliTemplate(appName: string): TemplateFile[] {
     },
     {
       path: "README.md",
-      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from local AI accounts. No API keys.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, or \`gemini\`. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
+      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from local AI accounts. No API keys.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, \`gemini\`, or \`wp-studio\`. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
     },
     {
       path: "src/index.ts",
@@ -115,7 +115,7 @@ interface CliOptions {
   provider: ProviderSelector;
 }
 
-const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini"]);
+const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini", "wp-studio"]);
 const options = parseArgs(process.argv.slice(2));
 const harness = createHarnessClient({ defaultProvider: options.provider });
 const startedAt = Date.now();
@@ -166,7 +166,7 @@ function parseArgs(argv: string[]): CliOptions {
       const next = argv[index + 1];
 
       if (!next || !providers.has(next as ProviderSelector)) {
-        throw new Error("Use --provider with auto, claude, codex, copilot, or gemini.");
+        throw new Error("Use --provider with auto, claude, codex, copilot, gemini, or wp-studio.");
       }
 
       provider = next as ProviderSelector;
@@ -327,7 +327,7 @@ import {
 
 const harness = createHarnessClient();
 const port = Number(process.env.PORT || 3000);
-const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini"]);
+const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini", "wp-studio"]);
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/") {
@@ -769,6 +769,7 @@ function page(): string {
         <label><span>Codex</span><input type="radio" name="provider" value="codex" form="chat-form"></label>
         <label><span>Copilot</span><input type="radio" name="provider" value="copilot" form="chat-form"></label>
         <label><span>Gemini</span><input type="radio" name="provider" value="gemini" form="chat-form"></label>
+        <label><span>WP Studio</span><input type="radio" name="provider" value="wp-studio" form="chat-form"></label>
       </div>
     </aside>
 
@@ -776,7 +777,7 @@ function page(): string {
       <header class="topbar">
         <div>
           <strong>Streaming harness</strong>
-          <span>Claude, Codex, Copilot, or Gemini</span>
+          <span>Claude, Codex, Copilot, Gemini, or WP Studio</span>
         </div>
         <div class="status" id="status">Ready</div>
       </header>

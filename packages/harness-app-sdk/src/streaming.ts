@@ -107,6 +107,10 @@ function extractProviderText(provider: ProviderId, value: unknown, emittedText: 
     return extractCopilotText(value, emittedText);
   }
 
+  if (provider === "wp-studio") {
+    return extractWpStudioText(value, emittedText);
+  }
+
   return extractGeminiText(value, emittedText);
 }
 
@@ -202,6 +206,63 @@ function extractGeminiText(value: unknown, emittedText: boolean): string {
   }
 
   return "";
+}
+
+function extractWpStudioText(value: unknown, emittedText: boolean): string {
+  const record = asRecord(value);
+
+  if (!record || record.type !== "message") {
+    return "";
+  }
+
+  const message = asRecord(record.message);
+
+  if (!message) {
+    return "";
+  }
+
+  if (message.type === "message_update") {
+    const event = asRecord(message.assistantMessageEvent);
+
+    if (event?.type === "text_delta" && typeof event.delta === "string") {
+      return event.delta;
+    }
+
+    if (!emittedText && event?.type === "text_end" && typeof event.content === "string") {
+      return event.content;
+    }
+
+    return "";
+  }
+
+  if (emittedText) {
+    return "";
+  }
+
+  if (message.type === "message_end" || message.type === "turn_end") {
+    return assistantMessageText(message.message);
+  }
+
+  if (message.type === "agent_end" && Array.isArray(message.messages)) {
+    const assistant = [...message.messages]
+      .reverse()
+      .map((item) => asRecord(item))
+      .find((item) => item?.role === "assistant");
+
+    return contentText(assistant?.content);
+  }
+
+  return "";
+}
+
+function assistantMessageText(value: unknown): string {
+  const message = asRecord(value);
+
+  if (message?.role !== "assistant") {
+    return "";
+  }
+
+  return contentText(message.content);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
