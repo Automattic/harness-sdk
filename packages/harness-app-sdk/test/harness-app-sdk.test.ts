@@ -3,6 +3,7 @@ import {
   createClaudeAdapter,
   createCodexAdapter,
   createCopilotAdapter,
+  createCursorAdapter,
   createGeminiAdapter,
   createHarnessClient,
   createWpStudioAdapter,
@@ -166,7 +167,7 @@ describe("adapter command construction", () => {
       "plan"
     ]);
     expect(runner.calls[4]?.command).toBe("npx");
-    expect(runner.calls[4]?.args).toEqual(["wp-studio@latest", "code", "Say hello", "--json"]);
+    expect(runner.calls[4]?.args).toEqual(["-y", "wp-studio@latest", "code", "Say hello", "--json"]);
   });
 
   it("uses native streaming flags for every provider", async () => {
@@ -209,7 +210,7 @@ describe("adapter command construction", () => {
       "--approval-mode",
       "plan"
     ]);
-    expect(runner.calls[4]?.args).toEqual(["wp-studio@latest", "code", "Say hello", "--json"]);
+    expect(runner.calls[4]?.args).toEqual(["-y", "wp-studio@latest", "code", "Say hello", "--json"]);
   });
 
   it("lets callers opt in to edit-capable provider modes", async () => {
@@ -247,6 +248,7 @@ describe("adapter command construction", () => {
     expect(runner.calls[2]?.args.slice(-2)).toEqual(["--model", "gpt-5.2"]);
     expect(runner.calls[3]?.args.at(-1)).toBe("--sandbox");
     expect(runner.calls[4]?.args).toEqual([
+      "-y",
       "wp-studio@latest",
       "code",
       "Say hello",
@@ -258,6 +260,220 @@ describe("adapter command construction", () => {
 });
 
 describe("adapter streaming", () => {
+  it("uses the Claude Agent SDK by default", async () => {
+    const events: HarnessEvent[] = [];
+    const adapter = createClaudeAdapter({
+      sdk: {
+        query: () =>
+          fakeClaudeQuery([
+            {
+              type: "stream_event",
+              event: { type: "content_block_delta", delta: { text: "HELLO" } }
+            },
+            { type: "result", subtype: "success", result: "HELLO" }
+          ])
+      }
+    });
+
+    const result = await adapter.run(createRequest({ stream: true, onEvent: (event) => events.push(event) }));
+
+    expect(result.command).toBe("@anthropic-ai/claude-agent-sdk");
+    expect(result.text).toBe("HELLO");
+    expect(chunkText(events)).toBe("HELLO");
+  });
+
+  it("keeps Claude Agent SDK runs programmatic when request args are present", async () => {
+    const adapter = createClaudeAdapter({
+      sdk: {
+        query: () => fakeClaudeQuery([{ type: "result", subtype: "success", result: "HELLO" }])
+      }
+    });
+
+    const result = await adapter.run(createRequest({ args: ["--debug"] }));
+
+    expect(result.command).toBe("@anthropic-ai/claude-agent-sdk");
+    expect(result.args).not.toContain("--debug");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("uses the Codex SDK by default", async () => {
+    const events: HarnessEvent[] = [];
+    const adapter = createCodexAdapter({
+      sdk: {
+        Codex: class {
+          startThread() {
+            return {
+              async runStreamed() {
+                return {
+                  events: fakeAsyncEvents([
+                    { type: "thread.started", thread_id: "thread" },
+                    {
+                      type: "item.completed",
+                      item: { id: "item", type: "agent_message", text: "HELLO" }
+                    },
+                    {
+                      type: "turn.completed",
+                      usage: {
+                        cached_input_tokens: 0,
+                        input_tokens: 1,
+                        output_tokens: 1,
+                        reasoning_output_tokens: 0
+                      }
+                    }
+                  ])
+                };
+              }
+            };
+          }
+        } as never
+      }
+    });
+
+    const result = await adapter.run(createRequest({ stream: true, onEvent: (event) => events.push(event) }));
+
+    expect(result.command).toBe("@openai/codex-sdk");
+    expect(result.text).toBe("HELLO");
+    expect(chunkText(events)).toBe("HELLO");
+  });
+
+  it("keeps Codex SDK runs programmatic when request args are present", async () => {
+    const adapter = createCodexAdapter({
+      sdk: {
+        Codex: class {
+          startThread() {
+            return {
+              async run() {
+                return { finalResponse: "HELLO" };
+              }
+            };
+          }
+        } as never
+      }
+    });
+
+    const result = await adapter.run(createRequest({ args: ["--profile", "work"] }));
+
+    expect(result.command).toBe("@openai/codex-sdk");
+    expect(result.args).not.toContain("--profile");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("uses the Copilot SDK by default", async () => {
+    const events: HarnessEvent[] = [];
+    const adapter = createCopilotAdapter({
+      sdk: {
+        approveAll: () => ({ kind: "approve-once" }),
+        CopilotClient: class {
+          async start() {}
+          async stop() {
+            return [];
+          }
+          async createSession(config: { onEvent?: (event: unknown) => void }) {
+            return {
+              async abort() {},
+              async disconnect() {},
+              async sendAndWait() {
+                config.onEvent?.({
+                  type: "assistant.message_delta",
+                  data: { messageId: "message", deltaContent: "HELLO" }
+                });
+                config.onEvent?.({
+                  type: "assistant.message",
+                  data: { messageId: "message", content: "HELLO" }
+                });
+                return { data: { content: "HELLO" } };
+              }
+            };
+          }
+        } as never
+      }
+    });
+
+    const result = await adapter.run(createRequest({ stream: true, onEvent: (event) => events.push(event) }));
+
+    expect(result.command).toBe("@github/copilot-sdk");
+    expect(result.text).toBe("HELLO");
+    expect(chunkText(events)).toBe("HELLO");
+  });
+
+  it("keeps Copilot SDK runs programmatic when request args are present", async () => {
+    const adapter = createCopilotAdapter({
+      sdk: {
+        approveAll: () => ({ kind: "approve-once" }),
+        CopilotClient: class {
+          async start() {}
+          async stop() {
+            return [];
+          }
+          async createSession() {
+            return {
+              async abort() {},
+              async disconnect() {},
+              async sendAndWait() {
+                return { data: { content: "HELLO" } };
+              }
+            };
+          }
+        } as never
+      }
+    });
+
+    const result = await adapter.run(createRequest({ args: ["--model", "gpt-5.2"] }));
+
+    expect(result.command).toBe("@github/copilot-sdk");
+    expect(result.args).not.toContain("--model");
+    expect(result.text).toBe("HELLO");
+  });
+
+  it("detects and runs Cursor through the Cursor SDK", async () => {
+    const events: HarnessEvent[] = [];
+    const adapter = createCursorAdapter({
+      env: { CURSOR_API_KEY: "cursor-key" },
+      sdk: {
+        Cursor: class {
+          static async me() {
+            return { apiKeyName: "test", createdAt: "2026-01-01T00:00:00.000Z", userEmail: "dev@example.com" };
+          }
+        } as never,
+        Agent: class {
+          static async create() {
+            return {
+              close() {},
+              async send() {
+                return {
+                  supports: () => true,
+                  async *stream() {
+                    yield {
+                      type: "assistant",
+                      agent_id: "agent",
+                      run_id: "run",
+                      message: {
+                        role: "assistant",
+                        content: [{ type: "text", text: "HELLO" }]
+                      }
+                    };
+                  },
+                  async wait() {
+                    return { id: "run", agentId: "agent", status: "finished", result: "HELLO" };
+                  },
+                  async cancel() {}
+                };
+              }
+            };
+          }
+        } as never
+      }
+    });
+
+    const status = await adapter.detect();
+    const result = await adapter.run(createRequest({ stream: true, onEvent: (event) => events.push(event) }));
+
+    expect(status.authenticated).toBe(true);
+    expect(result.command).toBe("@cursor/sdk");
+    expect(result.text).toBe("HELLO");
+    expect(chunkText(events)).toBe("HELLO");
+  });
+
   it("extracts Claude content block deltas without duplicating final result events", async () => {
     const events: HarnessEvent[] = [];
     const runner = createMockRunner((_command, _args, options) => {
@@ -450,6 +666,20 @@ function chunkText(events: HarnessEvent[]): string {
     .filter((event) => event.type === "chunk")
     .map((event) => event.text)
     .join("");
+}
+
+function fakeClaudeQuery(messages: unknown[]) {
+  const iterator = fakeAsyncEvents(messages);
+
+  return Object.assign(iterator, {
+    close() {}
+  });
+}
+
+async function* fakeAsyncEvents(messages: unknown[]) {
+  for (const message of messages) {
+    yield message;
+  }
 }
 
 describe("harness client", () => {

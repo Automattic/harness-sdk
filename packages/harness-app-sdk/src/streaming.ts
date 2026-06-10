@@ -94,7 +94,7 @@ export function createJsonlStreamParser(provider: ProviderId): StreamParser {
   };
 }
 
-function extractProviderText(provider: ProviderId, value: unknown, emittedText: boolean): string {
+export function extractProviderText(provider: ProviderId, value: unknown, emittedText: boolean): string {
   if (provider === "claude") {
     return extractClaudeText(value, emittedText);
   }
@@ -105,6 +105,10 @@ function extractProviderText(provider: ProviderId, value: unknown, emittedText: 
 
   if (provider === "copilot") {
     return extractCopilotText(value, emittedText);
+  }
+
+  if (provider === "cursor") {
+    return extractCursorText(value, emittedText);
   }
 
   if (provider === "wp-studio") {
@@ -189,6 +193,29 @@ function extractCopilotText(value: unknown, emittedText: boolean): string {
 
   if (!emittedText && record.type === "assistant.message") {
     return stringFromPath(record, ["data", "content"]);
+  }
+
+  return "";
+}
+
+function extractCursorText(value: unknown, emittedText: boolean): string {
+  const record = asRecord(value);
+
+  if (!record) {
+    return "";
+  }
+
+  if (record.type === "assistant") {
+    const message = asRecord(record.message);
+    const text = contentText(message?.content);
+
+    if (text && !emittedText) {
+      return text;
+    }
+  }
+
+  if (record.type === "status" && typeof record.message === "string" && !emittedText) {
+    return "";
   }
 
   return "";

@@ -1,6 +1,7 @@
 import { createClaudeAdapter } from "./adapters/claude.js";
 import { createCodexAdapter } from "./adapters/codex.js";
 import { createCopilotAdapter } from "./adapters/copilot.js";
+import { createCursorAdapter } from "./adapters/cursor.js";
 import { createGeminiAdapter } from "./adapters/gemini.js";
 import { createWpStudioAdapter } from "./adapters/wp-studio.js";
 import { HarnessSdkError } from "./errors.js";
@@ -31,6 +32,7 @@ export function createHarnessClient(options: HarnessClientOptions = {}): Harness
       createClaudeAdapter({ runner: options.runner, env: options.env }),
       createCodexAdapter({ runner: options.runner, env: options.env }),
       createCopilotAdapter({ runner: options.runner, env: options.env }),
+      createCursorAdapter({ env: options.env }),
       createGeminiAdapter({ runner: options.runner, env: options.env }),
       createWpStudioAdapter({ runner: options.runner, env: options.env })
     ];
@@ -113,7 +115,7 @@ async function resolveProvider(
   if (!status) {
     throw new HarnessSdkError(
       "PROVIDER_NOT_FOUND",
-      "No local Harness provider is available. Install and log in to Claude, Codex, Copilot, Gemini, or WP Studio.",
+      "No Harness provider is available. Install and log in to Claude, Codex, Copilot, Cursor, Gemini, WP Studio, or configure CURSOR_API_KEY.",
       { statuses }
     );
   }

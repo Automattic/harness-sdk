@@ -28,7 +28,7 @@ export function createWpStudioAdapter(options: Partial<AdapterOptions> = {}): Pr
       };
     },
     async run(request: ResolvedHarnessRunRequest) {
-      const args = [WP_STUDIO_PACKAGE, "code", request.prompt];
+      const args = [...npxYesArgs(command), WP_STUDIO_PACKAGE, "code", request.prompt];
 
       args.push(...extraArgs(request));
       args.push("--json");
@@ -43,6 +43,10 @@ export function createWpStudioAdapter(options: Partial<AdapterOptions> = {}): Pr
       );
     }
   };
+}
+
+function npxYesArgs(command: string): string[] {
+  return command === "npx" || command.endsWith("/npx") || command.endsWith("\\npx") ? ["-y"] : [];
 }
 
 function withoutVersionResult<T extends ProviderStatus & { versionResult?: unknown }>(

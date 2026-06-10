@@ -1,6 +1,6 @@
 # harness-app-sdk
 
-Extend Harness with local AI accounts. No API keys.
+Extend Harness with SDK-backed AI providers.
 
 ```sh
 npm install harness-app-sdk

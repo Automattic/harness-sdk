@@ -58,7 +58,7 @@ describe("createHarnessApp", () => {
     expect(server).toContain("createServer");
     expect(server).toContain("createHarnessClient");
     expect(server).toContain("response.write(event.text)");
-    expect(server).toContain("No API keys");
+    expect(server).toContain("SDK-backed providers");
     expect(server).toContain('role="log"');
     expect(server).toContain("class=\"bubble\"");
     expect(server).toContain("provider");

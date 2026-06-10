@@ -3,14 +3,15 @@
 Scaffold a Harness App SDK demo app with streaming local-provider examples.
 
 ```sh
-npx create-harness-app my-app
-npx create-harness-app my-app --template cli
-npx create-harness-app my-app --template web
+npx -y create-harness-app my-app
+npx -y create-harness-app my-app --template cli
+npx -y create-harness-app my-app --template web
 ```
 
-Generated apps use local Claude, Codex, Copilot, Gemini, or WP Studio accounts
-through `harness-app-sdk`. No provider API keys are required. CLI and web
-templates stream model output as it arrives.
+Generated apps use Claude, Codex, Copilot, Cursor, Gemini, or WP Studio through
+`harness-app-sdk`. Cursor uses `CURSOR_API_KEY`; the other providers use their
+local account or tool authentication. CLI and web templates stream model output
+as it arrives.
 
 ## Templates
 

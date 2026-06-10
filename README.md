@@ -1,11 +1,13 @@
 <div align="center">
 
+<img src="./assets/harness-sdk-icon.svg" width="96" height="96" alt="Harness SDK icon">
+
 # Harness App SDK
 
-**Extend Harness with local AI accounts. No API keys.**
+**Extend Harness with SDK-backed AI providers.**
 
-Build apps and tools that talk to the AI coding CLIs developers already use:
-Claude Code, Codex CLI, GitHub Copilot CLI, Gemini CLI, and WP Studio.
+Build apps and tools that talk to the AI coding agents developers already use:
+Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, and WP Studio.
 
 [![npm: harness-app-sdk](https://img.shields.io/npm/v/harness-app-sdk?label=harness-app-sdk)](https://www.npmjs.com/package/harness-app-sdk)
 [![npm: create-harness-app](https://img.shields.io/npm/v/create-harness-app?label=create-harness-app)](https://www.npmjs.com/package/create-harness-app)
@@ -15,23 +17,23 @@ Claude Code, Codex CLI, GitHub Copilot CLI, Gemini CLI, and WP Studio.
 
 ## Why Harness App SDK?
 
-Most AI SDKs start by asking for API keys. Harness App SDK takes a different
-path: it uses local, authenticated CLI tools already installed on a developer's
-machine.
+Harness App SDK takes a provider-auth-friendly path: it uses official SDKs where
+agent SDKs exist, and falls back to local CLIs where a provider only publishes a
+CLI surface.
 
 That means your app can:
 
-- run through the user's existing Claude, Codex, Copilot, Gemini, or WP Studio account
-- avoid collecting, proxying, or storing provider API keys
-- detect which local providers are installed and authenticated
+- run through Claude, Codex, Copilot, Cursor, Gemini, or WP Studio
+- avoid provider API keys for local-account providers; Cursor uses `CURSOR_API_KEY`
+- detect which providers are installed or configured
 - stream model output as it arrives
-- keep provider-specific CLI quirks behind one small TypeScript API
+- keep provider-specific SDK and CLI quirks behind one small TypeScript API
 
 ## Packages
 
 | Package | Purpose |
 | --- | --- |
-| [`harness-app-sdk`](https://www.npmjs.com/package/harness-app-sdk) | TypeScript SDK for detecting and running local AI providers. |
+| [`harness-app-sdk`](https://www.npmjs.com/package/harness-app-sdk) | TypeScript SDK for detecting and running AI providers. |
 | [`create-harness-app`](https://www.npmjs.com/package/create-harness-app) | Scaffolder for chat-style CLI and web demos powered by streamed SDK output. |
 | `harness-debug-ui` | Private local workbench for SDK adapter development. |
 
@@ -40,7 +42,7 @@ That means your app can:
 Create a demo app:
 
 ```sh
-npx create-harness-app my-app
+npx -y create-harness-app my-app
 cd my-app
 npm install
 npm run dev
@@ -49,8 +51,8 @@ npm run dev
 Choose a template:
 
 ```sh
-npx create-harness-app my-cli --template cli
-npx create-harness-app my-web --template web
+npx -y create-harness-app my-cli --template cli
+npx -y create-harness-app my-web --template web
 ```
 
 The CLI template prints a streaming terminal transcript. The web template runs a
@@ -94,8 +96,8 @@ console.log(result.text);
 ## Streaming Output
 
 Harness App SDK keeps `run()` as the main entrypoint. Pass `stream: true` and an
-`onEvent` callback to receive output while the provider CLI is still running.
-The final promise still resolves with the buffered result.
+`onEvent` callback to receive output while the provider is still running. The
+final promise still resolves with the buffered result.
 
 ```ts
 import { createHarnessClient } from "harness-app-sdk";
@@ -132,18 +134,18 @@ provided.
 
 ## Providers
 
-| Provider | CLI command | Streaming mode |
+| Provider | Default integration | Notes |
 | --- | --- | --- |
-| Claude Code | `claude` | `claude -p ... --output-format stream-json --include-partial-messages` |
-| Codex CLI | `codex` | `codex exec --json ...` |
-| GitHub Copilot CLI | `copilot` | `copilot -p ... --output-format json --stream on` |
-| Gemini CLI | `gemini` | `gemini -p ... --output-format stream-json --approval-mode plan` |
-| WP Studio | `npx wp-studio@latest` | `npx wp-studio@latest code ... --json` |
+| Claude Code | `@anthropic-ai/claude-agent-sdk` | Falls back to `claude` when you pass a custom command, runner, or raw CLI `args`. |
+| Codex | `@openai/codex-sdk` | Falls back to `codex exec --json` for custom command, runner, or raw CLI `args`. |
+| GitHub Copilot | `@github/copilot-sdk` | Uses SDK auth detection and falls back to `copilot` for custom command, runner, or raw CLI `args`. |
+| Cursor | `@cursor/sdk` | Requires `CURSOR_API_KEY`; defaults to `composer-2` when no model is passed. |
+| Gemini CLI | `gemini` | No official Gemini CLI agent SDK found; uses `gemini -p ... --output-format stream-json`. |
+| WP Studio | `npx -y wp-studio@latest` | WordPress documents Studio as a CLI package; no separate SDK surface found. |
 
-Harness App SDK does not authenticate these tools for users. It detects local
-CLIs or launchers on `PATH` and returns clear status messages when a provider is
-missing or logged out. WP Studio is launched through `npx wp-studio@latest` at
-run time.
+Harness App SDK does not authenticate providers for users. It returns clear
+status messages when a provider is missing, logged out, or missing required
+configuration.
 
 ## Provider Selection
 
@@ -161,14 +163,14 @@ await harness.run({
 Supported provider IDs:
 
 ```ts
-type ProviderId = "claude" | "codex" | "copilot" | "gemini" | "wp-studio";
+type ProviderId = "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
 ```
 
 ## API Overview
 
 ### `createHarnessClient(options?)`
 
-Creates a client for detecting and running local providers.
+Creates a client for detecting and running providers.
 
 ```ts
 const harness = createHarnessClient({
@@ -187,7 +189,7 @@ Returns provider status objects:
 
 ```ts
 type ProviderStatus = {
-  id: "claude" | "codex" | "copilot" | "gemini" | "wp-studio";
+  id: "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
   name: string;
   command: string;
   available: boolean;
@@ -199,12 +201,12 @@ type ProviderStatus = {
 
 ### `harness.run(request)`
 
-Runs a prompt through a local provider.
+Runs a prompt through a provider.
 
 ```ts
 type HarnessRunRequest = {
   prompt: string;
-  provider?: "auto" | "claude" | "codex" | "copilot" | "gemini" | "wp-studio";
+  provider?: "auto" | "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   model?: string;
@@ -221,8 +223,9 @@ The result includes command metadata, buffered stdout/stderr, normalized text,
 duration, timeout state, and abort state.
 
 Use `args` for provider-specific CLI flags that Harness App SDK does not model
-directly. The SDK still uses `spawn` with `shell: false`, so each flag and value
-must be a separate array item:
+directly. SDK-backed providers fall back to their legacy CLI path when raw
+`args` are supplied. CLI execution uses `spawn` with `shell: false`, so each flag
+and value must be a separate array item:
 
 ```ts
 await harness.run({
@@ -251,15 +254,15 @@ type HarnessEvent =
 
 Harness App SDK is designed for local developer tools and conservative defaults.
 
-- It uses `spawn` with `shell: false`.
+- CLI fallbacks use `spawn` with `shell: false`.
 - It redacts common API key and token patterns from process output.
 - It supports timeouts and `AbortSignal`.
-- It defaults to read-only or planning modes where provider CLIs expose them.
+- It defaults to read-only or planning modes where providers expose them.
 - Elevated edit/tool behavior is opt-in with `allowEdits: true`.
 
-Provider CLIs can still perform powerful local actions when users enable them.
-Apps embedding this SDK should explain what they are asking the local provider to
-do and should choose the narrowest permissions that fit the workflow.
+Providers can still perform powerful local actions when users enable them. Apps
+embedding this SDK should explain what they are asking the provider to do and
+should choose the narrowest permissions that fit the workflow.
 
 ## Repository Layout
 

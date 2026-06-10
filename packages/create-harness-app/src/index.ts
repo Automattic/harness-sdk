@@ -100,7 +100,7 @@ function cliTemplate(appName: string): TemplateFile[] {
     },
     {
       path: "README.md",
-      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from local AI accounts. No API keys.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, \`gemini\`, or \`wp-studio\`. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
+      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from SDK-backed AI providers.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, \`cursor\`, \`gemini\`, or \`wp-studio\`. Cursor uses \`CURSOR_API_KEY\`; the other providers use their local account or tool authentication. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
     },
     {
       path: "src/index.ts",
@@ -115,7 +115,15 @@ interface CliOptions {
   provider: ProviderSelector;
 }
 
-const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini", "wp-studio"]);
+const providers = new Set<ProviderSelector>([
+  "auto",
+  "claude",
+  "codex",
+  "copilot",
+  "cursor",
+  "gemini",
+  "wp-studio"
+]);
 const options = parseArgs(process.argv.slice(2));
 const harness = createHarnessClient({ defaultProvider: options.provider });
 const startedAt = Date.now();
@@ -166,7 +174,7 @@ function parseArgs(argv: string[]): CliOptions {
       const next = argv[index + 1];
 
       if (!next || !providers.has(next as ProviderSelector)) {
-        throw new Error("Use --provider with auto, claude, codex, copilot, gemini, or wp-studio.");
+        throw new Error("Use --provider with auto, claude, codex, copilot, cursor, gemini, or wp-studio.");
       }
 
       provider = next as ProviderSelector;
@@ -186,7 +194,7 @@ function parseArgs(argv: string[]): CliOptions {
 function printHeader(provider: ProviderSelector): void {
   console.log("");
   console.log("Harness Chat CLI");
-  console.log("Local AI accounts | No API keys | provider: " + provider);
+  console.log("SDK-backed providers | Cursor uses CURSOR_API_KEY | provider: " + provider);
 }
 
 function printBubble(label: string, text: string): void {
@@ -314,7 +322,7 @@ function webTemplate(appName: string): TemplateFile[] {
     },
     {
       path: "README.md",
-      contents: `# ${appName}\n\nA chat-style Harness App SDK web demo that streams from local AI accounts. No API keys.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev\n\`\`\`\n\nOpen http://localhost:3000. Pick a local provider, send a prompt, and watch the assistant bubble fill as chunks arrive.\n`
+      contents: `# ${appName}\n\nA chat-style Harness App SDK web demo that streams from SDK-backed AI providers.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev\n\`\`\`\n\nOpen http://localhost:3000. Pick a provider, send a prompt, and watch the assistant bubble fill as chunks arrive. Cursor uses \`CURSOR_API_KEY\`; the other providers use their local account or tool authentication.\n`
     },
     {
       path: "src/server.ts",
@@ -327,7 +335,15 @@ import {
 
 const harness = createHarnessClient();
 const port = Number(process.env.PORT || 3000);
-const providers = new Set<ProviderSelector>(["auto", "claude", "codex", "copilot", "gemini", "wp-studio"]);
+const providers = new Set<ProviderSelector>([
+  "auto",
+  "claude",
+  "codex",
+  "copilot",
+  "cursor",
+  "gemini",
+  "wp-studio"
+]);
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/") {
@@ -760,14 +776,15 @@ function page(): string {
     <aside class="sidebar">
       <div class="mark">
         <div class="eyebrow">Harness App SDK</div>
-        <h1>Local AI chat</h1>
-        <p>Extend Harness with local AI accounts. No API keys.</p>
+        <h1>AI provider chat</h1>
+        <p>Use SDK-backed providers through one Harness API.</p>
       </div>
       <div class="provider-list" aria-label="Provider">
         <label><span>Auto</span><input type="radio" name="provider" value="auto" form="chat-form" checked></label>
         <label><span>Claude</span><input type="radio" name="provider" value="claude" form="chat-form"></label>
         <label><span>Codex</span><input type="radio" name="provider" value="codex" form="chat-form"></label>
         <label><span>Copilot</span><input type="radio" name="provider" value="copilot" form="chat-form"></label>
+        <label><span>Cursor</span><input type="radio" name="provider" value="cursor" form="chat-form"></label>
         <label><span>Gemini</span><input type="radio" name="provider" value="gemini" form="chat-form"></label>
         <label><span>WP Studio</span><input type="radio" name="provider" value="wp-studio" form="chat-form"></label>
       </div>
@@ -777,7 +794,7 @@ function page(): string {
       <header class="topbar">
         <div>
           <strong>Streaming harness</strong>
-          <span>Claude, Codex, Copilot, Gemini, or WP Studio</span>
+          <span>Claude, Codex, Copilot, Cursor, Gemini, or WP Studio</span>
         </div>
         <div class="status" id="status">Ready</div>
       </header>

@@ -87,12 +87,12 @@ function parseArgs(argv: string[]): ParsedArgs {
 function printHelp(): void {
   console.log(`create-harness-app
 
-Create a Harness App SDK demo app that uses local AI accounts. No API keys.
+Create a Harness App SDK demo app that uses SDK-backed AI providers.
 
 Usage:
-  npx create-harness-app <app-name>
-  npx create-harness-app <app-name> --template cli
-  npx create-harness-app <app-name> --template web
+  npx -y create-harness-app <app-name>
+  npx -y create-harness-app <app-name> --template cli
+  npx -y create-harness-app <app-name> --template web
 
 Options:
   -t, --template <cli|web>  Choose the generated demo template.

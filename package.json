@@ -2,7 +2,7 @@
   "name": "harness-sdk-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Extend Harness with local AI accounts. No API keys.",
+  "description": "Extend Harness with SDK-backed AI providers.",
   "license": "MIT",
   "type": "module",
   "repository": {

@@ -2,10 +2,10 @@ import { describe, expect, test } from "vitest";
 import { createHarnessClient, type ProviderId } from "../src/index.js";
 
 const liveTest = process.env.HARNESS_APP_SDK_LIVE === "1" ? test : test.skip;
-const providers: ProviderId[] = ["claude", "codex", "copilot", "gemini", "wp-studio"];
+const providers: ProviderId[] = ["claude", "codex", "copilot", "cursor", "gemini", "wp-studio"];
 
-describe("live local providers", () => {
-  liveTest.each(providers)("detects %s without requiring SDK API keys", async (provider) => {
+describe("live providers", () => {
+  liveTest.each(providers)("detects %s with its configured authentication", async (provider) => {
     const client = createHarnessClient();
     const statuses = await client.detect();
     const status = statuses.find((candidate) => candidate.id === provider);
