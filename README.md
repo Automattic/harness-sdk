@@ -141,6 +141,7 @@ provided.
 | GitHub Copilot | `@github/copilot-sdk` | Uses SDK auth detection and falls back to `copilot` for custom command, runner, or raw CLI `args`. |
 | Cursor | `@cursor/sdk` | Requires `CURSOR_API_KEY`; defaults to `composer-2` when no model is passed. |
 | Gemini CLI | `gemini` | No official Gemini CLI agent SDK found; uses `gemini -p ... --output-format stream-json`. |
+| OpenCode | `@opencode-ai/sdk` | Uses the SDK programmatically; the SDK starts the local `opencode serve` runtime, so `opencode` must be on `PATH`. Pass models as `provider/model` when selecting a specific OpenCode model. |
 | WP Studio | `npx -y wp-studio@latest` | WordPress documents Studio as a CLI package; no separate SDK surface found. |
 
 Harness App SDK does not authenticate providers for users. It returns clear
@@ -163,7 +164,14 @@ await harness.run({
 Supported provider IDs:
 
 ```ts
-type ProviderId = "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
+type ProviderId =
+  | "claude"
+  | "codex"
+  | "copilot"
+  | "cursor"
+  | "gemini"
+  | "opencode"
+  | "wp-studio";
 ```
 
 ## API Overview
@@ -189,7 +197,7 @@ Returns provider status objects:
 
 ```ts
 type ProviderStatus = {
-  id: "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
+  id: "claude" | "codex" | "copilot" | "cursor" | "gemini" | "opencode" | "wp-studio";
   name: string;
   command: string;
   available: boolean;
@@ -206,7 +214,7 @@ Runs a prompt through a provider.
 ```ts
 type HarnessRunRequest = {
   prompt: string;
-  provider?: "auto" | "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
+  provider?: "auto" | "claude" | "codex" | "copilot" | "cursor" | "gemini" | "opencode" | "wp-studio";
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   model?: string;

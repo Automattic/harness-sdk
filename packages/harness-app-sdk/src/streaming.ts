@@ -111,6 +111,10 @@ export function extractProviderText(provider: ProviderId, value: unknown, emitte
     return extractCursorText(value, emittedText);
   }
 
+  if (provider === "opencode") {
+    return extractOpenCodeText(value, emittedText);
+  }
+
   if (provider === "wp-studio") {
     return extractWpStudioText(value, emittedText);
   }
@@ -233,6 +237,43 @@ function extractGeminiText(value: unknown, emittedText: boolean): string {
   }
 
   return "";
+}
+
+function extractOpenCodeText(value: unknown, emittedText: boolean): string {
+  const record = asRecord(value);
+
+  if (!record) {
+    return "";
+  }
+
+  if (record.type === "message.part.updated") {
+    const properties = asRecord(record.properties);
+
+    if (typeof properties?.delta === "string") {
+      return properties.delta;
+    }
+
+    const part = asRecord(properties?.part);
+
+    if (!emittedText && part?.type === "text" && typeof part.text === "string") {
+      return part.text;
+    }
+  }
+
+  if (!emittedText && Array.isArray(record.parts)) {
+    return openCodePartsText(record.parts);
+  }
+
+  return "";
+}
+
+function openCodePartsText(parts: unknown[]): string {
+  return parts
+    .map((part) => {
+      const record = asRecord(part);
+      return record?.type === "text" && typeof record.text === "string" ? record.text : "";
+    })
+    .join("");
 }
 
 function extractWpStudioText(value: unknown, emittedText: boolean): string {

@@ -100,7 +100,7 @@ function cliTemplate(appName: string): TemplateFile[] {
     },
     {
       path: "README.md",
-      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from SDK-backed AI providers.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, \`cursor\`, \`gemini\`, or \`wp-studio\`. Cursor uses \`CURSOR_API_KEY\`; the other providers use their local account or tool authentication. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
+      contents: `# ${appName}\n\nA chat-style Harness App SDK CLI demo that streams from SDK-backed AI providers.\n\n## Run\n\n\`\`\`sh\nnpm install\nnpm run dev -- \"Explain how this app uses Harness.\"\nnpm run dev -- --provider codex \"Summarize this folder.\"\n\`\`\`\n\nProviders can be \`auto\`, \`claude\`, \`codex\`, \`copilot\`, \`cursor\`, \`gemini\`, \`opencode\`, or \`wp-studio\`. Cursor uses \`CURSOR_API_KEY\`; the other providers use their local account or tool authentication. The template prints a small chat transcript and streams assistant chunks as they arrive.\n`
     },
     {
       path: "src/index.ts",
@@ -122,6 +122,7 @@ const providers = new Set<ProviderSelector>([
   "copilot",
   "cursor",
   "gemini",
+  "opencode",
   "wp-studio"
 ]);
 const options = parseArgs(process.argv.slice(2));
@@ -174,7 +175,7 @@ function parseArgs(argv: string[]): CliOptions {
       const next = argv[index + 1];
 
       if (!next || !providers.has(next as ProviderSelector)) {
-        throw new Error("Use --provider with auto, claude, codex, copilot, cursor, gemini, or wp-studio.");
+        throw new Error("Use --provider with auto, claude, codex, copilot, cursor, gemini, opencode, or wp-studio.");
       }
 
       provider = next as ProviderSelector;
@@ -342,6 +343,7 @@ const providers = new Set<ProviderSelector>([
   "copilot",
   "cursor",
   "gemini",
+  "opencode",
   "wp-studio"
 ]);
 
@@ -786,6 +788,7 @@ function page(): string {
         <label><span>Copilot</span><input type="radio" name="provider" value="copilot" form="chat-form"></label>
         <label><span>Cursor</span><input type="radio" name="provider" value="cursor" form="chat-form"></label>
         <label><span>Gemini</span><input type="radio" name="provider" value="gemini" form="chat-form"></label>
+        <label><span>OpenCode</span><input type="radio" name="provider" value="opencode" form="chat-form"></label>
         <label><span>WP Studio</span><input type="radio" name="provider" value="wp-studio" form="chat-form"></label>
       </div>
     </aside>

@@ -1,4 +1,11 @@
-export type ProviderId = "claude" | "codex" | "copilot" | "cursor" | "gemini" | "wp-studio";
+export type ProviderId =
+  | "claude"
+  | "codex"
+  | "copilot"
+  | "cursor"
+  | "gemini"
+  | "opencode"
+  | "wp-studio";
 
 export type ProviderSelector = ProviderId | "auto";
 

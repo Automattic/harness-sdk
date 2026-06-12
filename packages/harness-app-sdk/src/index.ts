@@ -4,6 +4,7 @@ export { createCodexAdapter } from "./adapters/codex.js";
 export { createCopilotAdapter } from "./adapters/copilot.js";
 export { createCursorAdapter } from "./adapters/cursor.js";
 export { createGeminiAdapter } from "./adapters/gemini.js";
+export { createOpenCodeAdapter } from "./adapters/opencode.js";
 export { createWpStudioAdapter } from "./adapters/wp-studio.js";
 export { HarnessSdkError, type HarnessSdkErrorCode } from "./errors.js";
 export type {

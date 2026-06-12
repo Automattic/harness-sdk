@@ -62,6 +62,7 @@ const providers = new Set<ProviderSelector>([
   "copilot",
   "cursor",
   "gemini",
+  "opencode",
   "wp-studio"
 ]);
 const defaultModelOption: ModelOption = { value: "", label: "Default model" };
@@ -90,6 +91,7 @@ const modelOptionsByProvider: Record<ProviderId, ModelOption[]> = {
     { value: "gemini-3-pro-preview", label: "Gemini 3 Pro Preview" },
     { value: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" }
   ],
+  opencode: [defaultModelOption],
   "wp-studio": [defaultModelOption]
 };
 
@@ -1934,6 +1936,7 @@ function page(): string {
                   <option value="copilot">GitHub Copilot</option>
                   <option value="cursor">Cursor</option>
                   <option value="gemini">Gemini CLI</option>
+                  <option value="opencode">OpenCode</option>
                   <option value="wp-studio">WP Studio</option>
                 </select>
               </span>
@@ -2019,6 +2022,7 @@ function page(): string {
       cursor: "Cursor",
       error: "Error",
       gemini: "Gemini CLI",
+      opencode: "OpenCode",
       "wp-studio": "WP Studio"
     };
     const harnessIconUrl = ${JSON.stringify(harnessMonoIconUrl)};
@@ -2029,6 +2033,7 @@ function page(): string {
       copilot: "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/githubcopilot.svg",
       cursor: "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/cursor.svg",
       gemini: "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlegemini.svg",
+      opencode: "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/opencode.svg",
       "wp-studio": "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/wordpress.svg"
     };
     let abortController;

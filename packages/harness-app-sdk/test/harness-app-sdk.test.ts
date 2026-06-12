@@ -6,6 +6,7 @@ import {
   createCursorAdapter,
   createGeminiAdapter,
   createHarnessClient,
+  createOpenCodeAdapter,
   createWpStudioAdapter,
   HarnessSdkError,
   type CommandResult,
@@ -472,6 +473,97 @@ describe("adapter streaming", () => {
     expect(result.command).toBe("@cursor/sdk");
     expect(result.text).toBe("HELLO");
     expect(chunkText(events)).toBe("HELLO");
+  });
+
+  it("detects and runs OpenCode through the OpenCode SDK", async () => {
+    const events: HarnessEvent[] = [];
+    let closed = false;
+    const adapter = createOpenCodeAdapter({
+      sdk: {
+        async createOpencode() {
+          return {
+            client: {
+              provider: {
+                async list() {
+                  return {
+                    data: {
+                      all: [],
+                      default: {},
+                      connected: ["anthropic"]
+                    }
+                  };
+                }
+              },
+              session: {
+                async create() {
+                  return {
+                    data: {
+                      id: "session-1",
+                      parentID: undefined,
+                      title: "Harness run",
+                      version: "1.0.0",
+                      time: { created: Date.now(), updated: Date.now() }
+                    }
+                  };
+                },
+                async prompt(options: { body?: { model?: { providerID: string; modelID: string } } }) {
+                  return {
+                    data: {
+                      info: {
+                        id: "message-1",
+                        sessionID: "session-1",
+                        role: "assistant",
+                        time: { created: Date.now() },
+                        modelID: options.body?.model?.modelID ?? "claude-sonnet-4-5",
+                        providerID: options.body?.model?.providerID ?? "anthropic"
+                      },
+                      parts: [
+                        {
+                          id: "part-1",
+                          sessionID: "session-1",
+                          messageID: "message-1",
+                          type: "text",
+                          text: "HELLO"
+                        }
+                      ]
+                    }
+                  };
+                },
+                async abort() {
+                  return { data: true };
+                }
+              }
+            },
+            server: {
+              url: "http://127.0.0.1:4096",
+              close() {
+                closed = true;
+              }
+            }
+          };
+        }
+      } as never
+    });
+
+    const status = await adapter.detect();
+    const result = await adapter.run(
+      createRequest({
+        model: "anthropic/claude-sonnet-4-5",
+        stream: true,
+        onEvent: (event) => events.push(event)
+      })
+    );
+
+    expect(status).toMatchObject({
+      id: "opencode",
+      available: true,
+      authenticated: true
+    });
+    expect(result.command).toBe("@opencode-ai/sdk");
+    expect(result.args).toEqual(["session.prompt", "--model", "anthropic/claude-sonnet-4-5"]);
+    expect(result.text).toBe("HELLO");
+    expect(chunkText(events)).toBe("HELLO");
+    expect(closed).toBe(true);
   });
 
   it("extracts Claude content block deltas without duplicating final result events", async () => {

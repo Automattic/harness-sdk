@@ -8,7 +8,7 @@ npx -y create-harness-app my-app --template cli
 npx -y create-harness-app my-app --template web
 ```
 
-Generated apps use Claude, Codex, Copilot, Cursor, Gemini, or WP Studio through
+Generated apps use Claude, Codex, Copilot, Cursor, Gemini, OpenCode, or WP Studio through
 `harness-app-sdk`. Cursor uses `CURSOR_API_KEY`; the other providers use their
 local account or tool authentication. CLI and web templates stream model output
 as it arrives.

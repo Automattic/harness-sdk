@@ -2,6 +2,13 @@
 
 Extend Harness with SDK-backed AI providers.
 
+Supports Claude Code, Codex, GitHub Copilot, Cursor, Gemini CLI, OpenCode, and
+WP Studio behind one provider API.
+
+OpenCode is called through `@opencode-ai/sdk`; that SDK starts the local
+`opencode serve` runtime, so the `opencode` executable still needs to be
+available on `PATH`.
+
 ```sh
 npm install harness-app-sdk
 ```
