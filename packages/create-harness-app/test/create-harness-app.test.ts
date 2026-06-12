@@ -33,7 +33,7 @@ describe("createHarnessApp", () => {
       dependencies: Record<string, string>;
     };
 
-    expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.6");
+    expect(packageJson.dependencies["harness-app-sdk"]).toBe("^0.1.7");
     await expect(stat(join(directory, "tsconfig.json"))).resolves.toBeTruthy();
 
     const cli = await readFile(join(directory, "src/index.ts"), "utf8");

@@ -1,6 +1,6 @@
 {
   "name": "harness-app-sdk",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Extend Harness with SDK-backed AI providers.",
   "license": "MIT",
   "type": "module",
